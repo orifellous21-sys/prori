@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Studio Simple</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="studio-rail">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <strong>Studio <em>Simple</em></strong>
+        </div>
+
+        <section class="record-zone">
+          <div class="disc" id="recordHalo">
+            <button class="record-button" id="recordButton" aria-label="Start recording">
+              <span class="record-dot"></span>
+            </button>
+          </div>
+          <div>
+            <p class="status-label" id="mainStatus">Ready when you are</p>
+            <p class="time-readout" id="recordTimer">00:00</p>
+          </div>
+        </section>
+
+        <nav class="rail-nav" aria-label="Studio sections">
+          <a class="active" href="#">Studio</a>
+          <a href="#">Library</a>
+          <a href="#">Sounds</a>
+          <a href="#">Projects</a>
+        </nav>
+
+        <div class="rail-footer">
+          <button class="icon-button" id="resetButton" title="Start a fresh song" aria-label="Start a fresh song">Reset</button>
+        </div>
+      </aside>
+
+      <section class="stage">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Current session</p>
+            <h1 id="trackName">No audio loaded yet</h1>
+          </div>
+          <div class="top-actions">
+            <button id="autoEnhanceButton" class="enhance-button" disabled>Auto-enhance</button>
+            <label class="import-button" for="fileInput">
+              <input id="fileInput" type="file" accept="audio/*" multiple />
+              Import
+            </label>
+            <button id="exportButton" class="transport-button export" disabled title="Export polished WAV">
+              Export
+            </button>
+          </div>
+        </header>
+
+        <section class="tracks-section" aria-label="Tracks">
+          <div class="timeline-ruler">
+            <span>0:00</span>
+            <span>0:10</span>
+            <span>0:20</span>
+            <span>0:30</span>
+            <span>0:40</span>
+          </div>
+          <div class="tracks-header">
+            <div>
+              <p class="section-kicker">Tracks</p>
+              <h2 id="trackCount">No tracks yet</h2>
+            </div>
+          </div>
+          <div class="track-list" id="trackList"></div>
+        </section>
+
+        <section class="wave-section" aria-label="Audio editor">
+          <div class="wave-header">
+            <div>
+              <p class="section-kicker">Selected track</p>
+              <h2>Waveform trim</h2>
+            </div>
+            <div class="trim-times">
+              <span id="trimStartLabel">Start 00:00</span>
+              <span id="trimEndLabel">End 00:00</span>
+            </div>
+          </div>
+
+          <div class="wave-wrap">
+            <canvas id="waveform" width="1200" height="260" aria-label="Waveform"></canvas>
+            <div class="empty-wave" id="emptyWave">Record something or import an audio file.</div>
+          </div>
+
+          <div class="trim-panel">
+            <div class="trim-controls">
+              <label>
+                <span>Start</span>
+                <input id="trimStart" type="range" min="0" max="100" value="0" disabled />
+              </label>
+              <label>
+                <span>End</span>
+                <input id="trimEnd" type="range" min="0" max="100" value="100" disabled />
+              </label>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <aside class="mix-panel">
+        <div class="mix-heading">
+          <p class="section-kicker">One knob fixes</p>
+          <h2>Make it shine</h2>
+        </div>
+
+        <div class="preset-row" role="group" aria-label="Sound presets">
+          <button class="preset active" data-preset="balanced">Balanced</button>
+          <button class="preset" data-preset="vocal">Vocal</button>
+          <button class="preset" data-preset="beat">Beat</button>
+        </div>
+
+        <div class="control-stack">
+          <label class="mix-control">
+            <span>
+              <strong>Clean</strong>
+              <small>Removes rumble and soft background noise</small>
+            </span>
+            <input id="cleanControl" type="range" min="0" max="100" value="35" />
+            <output id="cleanValue">35</output>
+          </label>
+
+          <label class="mix-control">
+            <span>
+              <strong>Clarity</strong>
+              <small>Adds presence so vocals and melodies cut through</small>
+            </span>
+            <input id="clarityControl" type="range" min="0" max="100" value="45" />
+            <output id="clarityValue">45</output>
+          </label>
+
+          <label class="mix-control">
+            <span>
+              <strong>Warmth</strong>
+              <small>Gives the sound a smoother, fuller body</small>
+            </span>
+            <input id="warmthControl" type="range" min="0" max="100" value="35" />
+            <output id="warmthValue">35</output>
+          </label>
+
+          <label class="mix-control">
+            <span>
+              <strong>Polish</strong>
+              <small>Levels the take and makes it feel finished</small>
+            </span>
+            <input id="polishControl" type="range" min="0" max="100" value="55" />
+            <output id="polishValue">55</output>
+          </label>
+
+          <label class="mix-control">
+            <span>
+              <strong>Space</strong>
+              <small>Adds a little room without drowning the song</small>
+            </span>
+            <input id="spaceControl" type="range" min="0" max="100" value="18" />
+            <output id="spaceValue">18</output>
+          </label>
+        </div>
+
+        <div class="tips">
+          <p id="smartTip">Balanced keeps the sound clean, clear, and natural.</p>
+        </div>
+      </aside>
+
+      <footer class="bottom-transport">
+        <div class="transport-left">
+          <button class="ghost-button" title="Undo">Undo</button>
+          <button class="ghost-button" title="Redo">Redo</button>
+        </div>
+        <button id="playButton" class="play-pill" disabled title="Play or pause">
+          <span id="playIcon" aria-hidden="true">Play</span>
+          <span id="playText">Play</span>
+        </button>
+        <div class="transport-stats">
+          <span>120 BPM</span>
+          <span>4/4</span>
+        </div>
+      </footer>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
