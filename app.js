@@ -703,6 +703,28 @@ function renderTracks() {
   els.trackName.textContent = selected ? selected.name : "No audio loaded yet";
   els.trackList.innerHTML = "";
 
+  if (!count) {
+    ["Vocals", "Guitar", "Bass", "Drums", "Keys"].forEach((name, index) => {
+      const card = document.createElement("article");
+      card.className = "track-card placeholder";
+      card.innerHTML = `
+        <div class="track-main">
+          <span class="track-title">${name}</span>
+          <span class="track-meta">Ready lane</span>
+        </div>
+        <div class="track-lane" aria-hidden="true">
+          ${makeWavePieces(index)}
+        </div>
+        <div class="track-actions ghost-actions">
+          <span>M</span>
+          <span>S</span>
+        </div>
+      `;
+      els.trackList.append(card);
+    });
+    return;
+  }
+
   state.tracks.forEach((track) => {
     const card = document.createElement("article");
     card.className = `track-card${track.id === state.selectedTrackId ? " active" : ""}`;
@@ -713,6 +735,9 @@ function renderTracks() {
         <span class="track-title">${escapeHtml(track.name)}</span>
         <span class="track-meta">${track.type === "recording" ? "Recording" : "Audio"} - ${formatTime(track.buffer.duration)}</span>
       </button>
+      <div class="track-lane" data-action="select" aria-hidden="true">
+        ${makeWavePieces(track.id)}
+      </div>
       <label class="track-volume">
         <span>Volume ${track.volume}</span>
         <input type="range" min="0" max="100" value="${track.volume}" data-action="volume" />
@@ -725,6 +750,14 @@ function renderTracks() {
 
     els.trackList.append(card);
   });
+}
+
+function makeWavePieces(seed) {
+  return Array.from({ length: 34 }, (_, index) => {
+    const height = 18 + ((index * 17 + seed * 11) % 46);
+    const width = 8 + ((index * 7 + seed) % 24);
+    return `<span style="--h:${height}%;--w:${width}px"></span>`;
+  }).join("");
 }
 
 function escapeHtml(value) {
