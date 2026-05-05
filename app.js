@@ -767,17 +767,19 @@ els.fileInput.addEventListener("change", async (event) => {
   event.target.value = "";
 });
 
-els.fileDrop.addEventListener("dragover", (event) => {
-  event.preventDefault();
-});
+if (els.fileDrop) {
+  els.fileDrop.addEventListener("dragover", (event) => {
+    event.preventDefault();
+  });
 
-els.fileDrop.addEventListener("drop", async (event) => {
-  event.preventDefault();
-  const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith("audio/"));
-  for (const file of files) {
-    await loadBlob(file, file.name, "audio");
-  }
-});
+  els.fileDrop.addEventListener("drop", async (event) => {
+    event.preventDefault();
+    const files = [...event.dataTransfer.files].filter((file) => file.type.startsWith("audio/"));
+    for (const file of files) {
+      await loadBlob(file, file.name, "audio");
+    }
+  });
+}
 
 els.trackList.addEventListener("input", (event) => {
   const card = event.target.closest(".track-card");
