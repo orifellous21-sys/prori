@@ -1,3 +1,11 @@
 server.ready
 server.out.log
 server.err.log
+.env
+viral-video-automation/output/
+viral-video-automation/ready_videos/*.avi
+viral-video-automation/ready_videos/*.mp4
+viral-video-automation/ready_videos/*.wav
+viral-video-automation/ready_videos/*.json
+viral-video-automation/ready_videos/*.txt
+viral-video-automation/quote_tts.ps1

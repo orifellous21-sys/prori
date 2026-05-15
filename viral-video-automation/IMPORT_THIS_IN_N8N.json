@@ -1,0 +1,61 @@
+{
+  "name": "Automatic Shorts Machine",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      },
+      "id": "0f1b8d9c-8c2f-4d72-b553-307c508c00a1",
+      "name": "Every 12 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "command": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\Users\\zivfe\\OneDrive\\Documents\\New project 2\\viral-video-automation\\RUN_AUTOMATIC_SHORT.ps1\""
+      },
+      "id": "9ad713e6-d7ab-4bf6-a20d-172b722d8858",
+      "name": "Create Ready Short",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        560,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Every 12 Hours": {
+      "main": [
+        [
+          {
+            "node": "Create Ready Short",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {},
+  "versionId": "automatic-shorts-machine-v1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
