@@ -13,9 +13,9 @@ OUT = os.path.join(ROOT, "ready_videos")
 ASSET = os.path.join(ROOT, "assets", "jung-fresco-quote-poster.png")
 MUSIC = os.path.join(OUT, "dark_is_the_night_style_original_prototype.wav")
 
-WIDTH = 720
-HEIGHT = 1280
-FPS = 24
+WIDTH = 540
+HEIGHT = 960
+FPS = 15
 SAMPLE_RATE = 44100
 FADE_IN = 1.35
 HOLD = 7.5
@@ -49,7 +49,7 @@ def fade_alpha(t):
 
 def jpeg_bytes(img):
     buf = BytesIO()
-    img.save(buf, format="JPEG", quality=90, optimize=True)
+    img.save(buf, format="JPEG", quality=72, optimize=True)
     return buf.getvalue()
 
 
