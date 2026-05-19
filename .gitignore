@@ -9,3 +9,4 @@ viral-video-automation/ready_videos/*.wav
 viral-video-automation/ready_videos/*.json
 viral-video-automation/ready_videos/*.txt
 viral-video-automation/quote_tts.ps1
+viral-video-automation/__pycache__/
