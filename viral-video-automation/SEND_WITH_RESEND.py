@@ -43,8 +43,9 @@ def send_email(api_key, sender, recipient, subject, body, attachment_path):
         "to": [recipient],
         "subject": subject,
         "text": body,
-        "attachments": [build_attachment(attachment_path)],
     }
+    if attachment_path:
+        payload["attachments"] = [build_attachment(attachment_path)]
     request = urllib.request.Request(
         RESEND_URL,
         data=json.dumps(payload).encode("utf-8"),
@@ -73,13 +74,13 @@ def main():
     parser.add_argument("--from-email", default=os.environ.get("RESEND_FROM", "Daily Quote Videos <onboarding@resend.dev>"))
     parser.add_argument("--subject", default="Daily quote video")
     parser.add_argument("--body", required=True)
-    parser.add_argument("--attachment", required=True)
+    parser.add_argument("--attachment")
     args = parser.parse_args()
 
     api_key = os.environ.get("RESEND_API_KEY")
     if not api_key:
         fail("RESEND_API_KEY is not set.")
-    if not os.path.exists(args.attachment):
+    if args.attachment and not os.path.exists(args.attachment):
         fail(f"Attachment does not exist: {args.attachment}")
 
     send_email(api_key, args.from_email, args.to, args.subject, args.body, args.attachment)
