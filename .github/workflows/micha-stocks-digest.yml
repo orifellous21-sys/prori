@@ -1,0 +1,33 @@
+name: Micha Stocks Daily Digest
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_send:
+        description: "Send even if it is not 9 AM in Asia/Jerusalem"
+        required: false
+        default: "1"
+  schedule:
+    # Run at 9 AM Israel time in summer (UTC+3) and winter (UTC+2).
+    # The script checks the real Asia/Jerusalem hour and skips the wrong one.
+    - cron: "0 6 * * *"
+    - cron: "0 7 * * *"
+
+jobs:
+  send-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Send Micha Stocks digest
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ vars.RESEND_FROM_EMAIL }}
+          DIGEST_TO_EMAIL: ${{ vars.DIGEST_TO_EMAIL }}
+          YOUTUBE_CHANNEL_HANDLE: ${{ vars.YOUTUBE_CHANNEL_HANDLE }}
+          YOUTUBE_CHANNEL_ID: ${{ vars.YOUTUBE_CHANNEL_ID }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+        run: node scripts/micha-stocks-digest.mjs
