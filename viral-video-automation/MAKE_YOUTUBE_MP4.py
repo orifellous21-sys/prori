@@ -1,6 +1,8 @@
 import argparse
+import glob
 import os
 import subprocess
+import sys
 from datetime import datetime
 
 from PIL import Image, ImageDraw, ImageFont
@@ -99,6 +101,13 @@ def find_ffmpeg(explicit=None):
     candidates = []
     if explicit:
         candidates.append(explicit)
+    try:
+        import imageio_ffmpeg
+
+        candidates.append(imageio_ffmpeg.get_ffmpeg_exe())
+    except Exception:
+        pass
+    candidates.extend(glob.glob(os.path.expandvars(r"%APPDATA%\Python\Python*\site-packages\imageio_ffmpeg\binaries\ffmpeg*.exe")))
     candidates.extend(
         [
             os.environ.get("FFMPEG_EXE"),
@@ -108,6 +117,13 @@ def find_ffmpeg(explicit=None):
     for candidate in candidates:
         if candidate and os.path.exists(candidate):
             return candidate
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "--user", "imageio-ffmpeg"], check=True)
+        import imageio_ffmpeg
+
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        pass
     raise FileNotFoundError("FFmpeg executable was not found")
 
 
