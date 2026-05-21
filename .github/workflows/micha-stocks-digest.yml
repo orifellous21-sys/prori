@@ -8,11 +8,11 @@ on:
         required: false
         default: "1"
   schedule:
-    # Run at 9 AM Israel time in summer (UTC+3) and winter (UTC+2).
-    # The script checks the real Asia/Jerusalem hour and skips the wrong one.
-    # Avoid minute 0 because GitHub may delay or drop schedule events at high load.
-    - cron: "17 6 * * *"
-    - cron: "17 7 * * *"
+    # Retry during the 9 AM Israel-time window. The duplicate sends are guarded
+    # by Resend Idempotency-Key, and the script only accepts videos published
+    # before 9:00 AM Asia/Jerusalem.
+    - cron: "17,32,47 6 * * *"
+    - cron: "17,32,47 7 * * *"
 
 jobs:
   send-digest:
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
       - name: Send Micha Stocks digest
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

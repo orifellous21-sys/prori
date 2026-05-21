@@ -31,16 +31,17 @@ async function main() {
 
   const now = new Date();
   const localParts = getLocalParts(now);
-  if (!config.forceSendOutsideNine && localParts.hour !== 9) {
-    console.log(`Skipping: local hour is ${localParts.hour}, not 9 in ${TIME_ZONE}.`);
+  if (!config.forceSendOutsideNine && ![9, 10].includes(localParts.hour)) {
+    console.log(`Skipping: local hour is ${localParts.hour}, outside the retry window in ${TIME_ZONE}.`);
     return;
   }
 
   const channelId = config.channelId || await resolveChannelId(config.channelHandle) || FALLBACK_CHANNEL_ID;
   const feed = await fetchText(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
+  const cutoff = localDateAtHour(now, 9);
   const videos = parseFeed(feed)
     .filter((video) => isSameLocalDate(video.publishedAt, now))
-    .filter((video) => video.publishedAt <= now)
+    .filter((video) => video.publishedAt <= cutoff)
     .sort((a, b) => b.publishedAt - a.publishedAt);
 
   if (videos.length === 0) {
@@ -48,6 +49,7 @@ async function main() {
       subject: "Micha Stocks daily summary - no same-day video found",
       text: `No same-day Micha Stocks video was found before 9:00 AM ${TIME_ZONE}.\n\nChecked channel: ${channelId}\nDate: ${formatLocalDate(now)}`,
       html: `<p>No same-day Micha Stocks video was found before 9:00 AM ${TIME_ZONE}.</p><p>Checked channel: ${channelId}<br>Date: ${formatLocalDate(now)}</p>`,
+      idempotencyKey: `micha-stocks:${formatLocalDate(now)}:no-video`,
     });
     return;
   }
@@ -66,6 +68,7 @@ async function main() {
     subject: `Micha Stocks daily summary - ${video.title}`.slice(0, 180),
     text: digest.text,
     html: digest.html,
+    idempotencyKey: `micha-stocks:${formatLocalDate(now)}:${video.videoId}`,
   });
 }
 
@@ -214,12 +217,13 @@ function describeMention(text, symbol) {
   return `${tone}. Context: ${context || "mentioned, but not enough context was available."}`;
 }
 
-async function sendEmail({ subject, text, html }) {
+async function sendEmail({ subject, text, html, idempotencyKey }) {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${config.resendApiKey}`,
       "Content-Type": "application/json",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
     body: JSON.stringify({
       from: config.fromEmail,
@@ -235,6 +239,20 @@ async function sendEmail({ subject, text, html }) {
     throw new Error(`Resend failed with ${response.status}: ${body}`);
   }
   console.log(`Sent email: ${body}`);
+}
+
+function localDateAtHour(date, hour) {
+  const localDate = formatLocalDate(date);
+  const [year, month, day] = localDate.split("-").map(Number);
+  const approxUtc = new Date(Date.UTC(year, month - 1, day, hour - 2, 0, 0));
+  for (let offsetMinutes = -180; offsetMinutes <= 180; offsetMinutes += 15) {
+    const candidate = new Date(approxUtc.getTime() + offsetMinutes * 60 * 1000);
+    const parts = getLocalParts(candidate);
+    if (parts.year === year && parts.month === month && parts.day === day && parts.hour === hour) {
+      return candidate;
+    }
+  }
+  return approxUtc;
 }
 
 async function fetchText(url) {
