@@ -10,8 +10,9 @@ on:
   schedule:
     # Run at 9 AM Israel time in summer (UTC+3) and winter (UTC+2).
     # The script checks the real Asia/Jerusalem hour and skips the wrong one.
-    - cron: "0 6 * * *"
-    - cron: "0 7 * * *"
+    # Avoid minute 0 because GitHub may delay or drop schedule events at high load.
+    - cron: "17 6 * * *"
+    - cron: "17 7 * * *"
 
 jobs:
   send-digest:
