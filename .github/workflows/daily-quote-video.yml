@@ -1,6 +1,15 @@
 name: Daily Quote Video Email
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/daily-quote-video.yml"
+      - "viral-video-automation/DAILY_QUOTE_VIDEO_EMAIL.py"
+      - "viral-video-automation/MAKE_YOUTUBE_MP4.py"
+      - "viral-video-automation/SEND_WITH_RESEND.py"
+      - "viral-video-automation/assets/**"
   workflow_dispatch:
     inputs:
       force_send:
@@ -28,5 +37,13 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM: ${{ vars.RESEND_FROM_EMAIL }}
           DAILY_QUOTE_TO_EMAIL: ${{ vars.DIGEST_TO_EMAIL || 'ori.fellous21@gmail.com' }}
-          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+          FORCE_SEND: ${{ github.event_name == 'push' && '1' || github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
         run: python viral-video-automation/DAILY_QUOTE_VIDEO_EMAIL.py
+      - name: Keep rendered video for verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-quote-video
+          path: viral-video-automation/output/daily_quote/*.mp4
+          if-no-files-found: ignore
+          retention-days: 7

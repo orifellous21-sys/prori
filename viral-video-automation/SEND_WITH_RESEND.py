@@ -72,7 +72,7 @@ def send_email(api_key, sender, recipient, subject, body, attachment_path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--to", default="ori.fellous21@gmail.com")
-    parser.add_argument("--from-email", default=os.environ.get("RESEND_FROM", "Daily Quote Videos <onboarding@resend.dev>"))
+    parser.add_argument("--from-email", default=os.environ.get("RESEND_FROM") or "Daily Quote Videos <onboarding@resend.dev>")
     parser.add_argument("--subject", default="Daily quote video")
     parser.add_argument("--body", required=True)
     parser.add_argument("--attachment")

@@ -191,6 +191,7 @@ def main():
     stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     poster = os.path.join(READY, f"youtube_quote_poster_1080_{stamp}.png")
     out = args.output or os.path.join(READY, f"jung_quote_youtube_1080p_{stamp}.mp4")
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     make_poster(args.background, poster)
     encode(find_ffmpeg(args.ffmpeg), poster, args.music, out)
     print(out)
