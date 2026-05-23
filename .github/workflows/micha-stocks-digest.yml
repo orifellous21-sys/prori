@@ -8,11 +8,10 @@ on:
         required: false
         default: "1"
   schedule:
-    # Retry during the 9 AM Israel-time window. The duplicate sends are guarded
-    # by Resend Idempotency-Key, and the script only accepts videos published
-    # before 9:00 AM Asia/Jerusalem.
-    - cron: "17,32,47 6 * * *"
-    - cron: "17,32,47 7 * * *"
+    # Retry through the day because GitHub can delay scheduled workflows by hours.
+    # The script skips anything before 9 AM Asia/Jerusalem and Resend
+    # Idempotency-Key prevents duplicate emails for the same date/video.
+    - cron: "17,47 6-13 * * *"
 
 jobs:
   send-digest:

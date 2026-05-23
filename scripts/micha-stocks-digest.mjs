@@ -31,8 +31,8 @@ async function main() {
 
   const now = new Date();
   const localParts = getLocalParts(now);
-  if (!config.forceSendOutsideNine && ![9, 10].includes(localParts.hour)) {
-    console.log(`Skipping: local hour is ${localParts.hour}, outside the retry window in ${TIME_ZONE}.`);
+  if (!config.forceSendOutsideNine && localParts.hour < 9) {
+    console.log(`Skipping: local hour is ${localParts.hour}, before the 9 AM digest window in ${TIME_ZONE}.`);
     return;
   }
 
