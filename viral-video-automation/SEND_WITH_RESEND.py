@@ -53,6 +53,7 @@ def send_email(api_key, sender, recipient, subject, body, attachment_path):
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "User-Agent": "daily-quote-video-automation/1.0",
+            **({"Idempotency-Key": os.environ["RESEND_IDEMPOTENCY_KEY"]} if os.environ.get("RESEND_IDEMPOTENCY_KEY") else {}),
         },
         method="POST",
     )

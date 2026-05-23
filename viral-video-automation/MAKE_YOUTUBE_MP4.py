@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(ROOT, "assets")
 READY = os.path.join(ROOT, "ready_videos")
 MUSIC = os.path.join(READY, "dark_is_the_night_style_original_prototype.wav")
+ASSET_MUSIC = os.path.join(ASSETS, "dark_is_the_night_style_original_prototype.wav")
 WIDTH = 1080
 HEIGHT = 1920
 FPS = 24
@@ -34,6 +35,9 @@ def font(size):
         r"C:\Windows\Fonts\georgia.ttf",
         r"C:\Windows\Fonts\times.ttf",
         r"C:\Windows\Fonts\arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+        "/usr/share/fonts/truetype/liberation2/LiberationSerif-Regular.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSerif.ttf",
     ]:
         if os.path.exists(path):
             return ImageFont.truetype(path, size)
@@ -174,7 +178,7 @@ def encode(ffmpeg, poster, music, out):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--background", default=os.path.join(ASSETS, "fresco-background-no-text.png"))
-    parser.add_argument("--music", default=MUSIC)
+    parser.add_argument("--music", default=ASSET_MUSIC if os.path.exists(ASSET_MUSIC) else MUSIC)
     parser.add_argument("--ffmpeg")
     parser.add_argument("--output")
     args = parser.parse_args()

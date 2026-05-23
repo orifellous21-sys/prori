@@ -1,0 +1,32 @@
+name: Daily Quote Video Email
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_send:
+        description: "Send even if it is before 16:00 in Asia/Jerusalem"
+        required: false
+        default: "1"
+  schedule:
+    # GitHub schedules can be delayed. Run a few times after 16:00 Israel time;
+    # the Resend idempotency key prevents duplicate emails for the same date.
+    - cron: "5,35 13-18 * * *"
+
+jobs:
+  send-video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install video dependencies
+        run: python -m pip install --upgrade pillow imageio-ffmpeg
+      - name: Generate and email daily quote video
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ vars.RESEND_FROM_EMAIL }}
+          DAILY_QUOTE_TO_EMAIL: ${{ vars.DIGEST_TO_EMAIL || 'ori.fellous21@gmail.com' }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+        run: python viral-video-automation/DAILY_QUOTE_VIDEO_EMAIL.py
