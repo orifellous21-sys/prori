@@ -8,10 +8,10 @@ on:
         required: false
         default: "1"
   schedule:
-    # Retry through the day because GitHub can delay scheduled workflows by hours.
+    # Retry throughout the day because GitHub can delay scheduled workflows by hours.
     # The script skips anything before 9 AM Asia/Jerusalem and Resend
     # Idempotency-Key prevents duplicate emails for the same date/video.
-    - cron: "17,47 6-13 * * *"
+    - cron: "17,47 * * * *"
 
 jobs:
   send-digest:
