@@ -34,10 +34,12 @@ jobs:
           DIGEST_MODE: morning
         run: node scripts/micha-stocks-digest.mjs
       - name: Send Micha Stocks opening live digest
+        continue-on-error: true
         env:
           DIGEST_MODE: opening
         run: node scripts/micha-stocks-digest.mjs
       - name: Send Micha Stocks closing live digest
+        continue-on-error: true
         env:
           DIGEST_MODE: closing
         run: node scripts/micha-stocks-digest.mjs
