@@ -8,10 +8,11 @@ on:
         required: false
         default: "1"
   schedule:
-    # GitHub schedules can be delayed or skipped at busy times.
-    # Run often around and after 16:00 Israel time; the script skips before
-    # 16:00 local time and Resend's idempotency key prevents duplicate emails.
-    - cron: "*/15 12-21 * * *"
+    # Same proven scheduling pattern as the existing Micha Stocks workflow:
+    # retry throughout the day because GitHub can delay scheduled workflows.
+    # The script skips anything before 16:00 Asia/Jerusalem and Resend's
+    # idempotency key prevents duplicate emails for the same date.
+    - cron: "17,47 * * * *"
 
 jobs:
   send-video:
