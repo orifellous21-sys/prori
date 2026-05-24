@@ -2,6 +2,26 @@ const TIME_ZONE = "Asia/Jerusalem";
 const DEFAULT_TO_EMAIL = "ori.fellous21@gmail.com";
 const DEFAULT_CHANNEL_HANDLE = "@Micha.Stocks";
 const FALLBACK_CHANNEL_ID = "UCQpDtNipLcAr13nU9MtXAIg";
+const LIVE_MODES = {
+  opening: {
+    label: "opening live",
+    subjectPrefix: "Micha Stocks opening live",
+    targetHour: 17,
+    targetMinute: 30,
+    beforeMinutes: 90,
+    afterMinutes: 240,
+    keywords: ["opening", "market open", "open live", "\u05e4\u05ea\u05d9\u05d7\u05d4", "\u05e4\u05ea\u05d9\u05d7\u05ea"],
+  },
+  closing: {
+    label: "closing live",
+    subjectPrefix: "Micha Stocks closing live",
+    targetHour: 0,
+    targetMinute: 0,
+    beforeMinutes: 75,
+    afterMinutes: 240,
+    keywords: ["closing", "market close", "close live", "\u05e1\u05d2\u05d9\u05e8\u05d4", "\u05e1\u05d2\u05d9\u05e8\u05ea"],
+  },
+};
 
 const config = {
   resendApiKey: process.env.RESEND_API_KEY,
@@ -9,6 +29,7 @@ const config = {
   toEmail: process.env.DIGEST_TO_EMAIL || DEFAULT_TO_EMAIL,
   channelHandle: process.env.YOUTUBE_CHANNEL_HANDLE || DEFAULT_CHANNEL_HANDLE,
   channelId: process.env.YOUTUBE_CHANNEL_ID || "",
+  digestMode: process.env.DIGEST_MODE || "morning",
   forceSendOutsideNine: process.env.FORCE_SEND === "1",
 };
 
@@ -30,31 +51,82 @@ async function main() {
   }
 
   const now = new Date();
+  const channelId = config.channelId || await resolveChannelId(config.channelHandle) || FALLBACK_CHANNEL_ID;
+  const feed = await fetchText(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
+  const videos = parseFeed(feed);
+
+  if (config.digestMode === "morning") {
+    await sendMorningDigest({ now, channelId, videos });
+    return;
+  }
+
+  const liveMode = LIVE_MODES[config.digestMode];
+  if (!liveMode) {
+    throw new Error(`Unknown DIGEST_MODE: ${config.digestMode}`);
+  }
+
+  await sendLiveDigest({ now, videos, liveMode, modeName: config.digestMode });
+}
+
+async function sendMorningDigest({ now, channelId, videos }) {
   const localParts = getLocalParts(now);
   if (!config.forceSendOutsideNine && localParts.hour < 9) {
     console.log(`Skipping: local hour is ${localParts.hour}, before the 9 AM digest window in ${TIME_ZONE}.`);
     return;
   }
 
-  const channelId = config.channelId || await resolveChannelId(config.channelHandle) || FALLBACK_CHANNEL_ID;
-  const feed = await fetchText(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`);
   const cutoff = localDateAtHour(now, 9);
-  const videos = parseFeed(feed)
+  const morningVideos = videos
     .filter((video) => isSameLocalDate(video.publishedAt, now))
     .filter((video) => video.publishedAt <= cutoff)
     .sort((a, b) => b.publishedAt - a.publishedAt);
 
-  if (videos.length === 0) {
+  if (morningVideos.length === 0) {
     await sendEmail({
       subject: "Micha Stocks daily summary - no same-day video found",
       text: `No same-day Micha Stocks video was found before 9:00 AM ${TIME_ZONE}.\n\nChecked channel: ${channelId}\nDate: ${formatLocalDate(now)}`,
       html: `<p>No same-day Micha Stocks video was found before 9:00 AM ${TIME_ZONE}.</p><p>Checked channel: ${channelId}<br>Date: ${formatLocalDate(now)}</p>`,
-      idempotencyKey: `micha-stocks:${formatLocalDate(now)}:no-video`,
+      idempotencyKey: `micha-stocks:${formatLocalDate(now)}:morning:no-video`,
     });
     return;
   }
 
-  const video = videos[0];
+  const video = morningVideos[0];
+  await sendVideoDigest({
+    video,
+    subjectPrefix: "Micha Stocks daily summary",
+    idempotencyKey: `micha-stocks:${formatLocalDate(now)}:morning:${video.videoId}`,
+  });
+}
+
+async function sendLiveDigest({ now, videos, liveMode, modeName }) {
+  const targetTime = localDateAtTime(now, liveMode.targetHour, liveMode.targetMinute);
+  if (!config.forceSendOutsideNine && now < targetTime) {
+    console.log(`Skipping ${liveMode.label}: before ${formatLocalDateTime(targetTime)} in ${TIME_ZONE}.`);
+    return;
+  }
+
+  const windowStart = new Date(targetTime.getTime() - liveMode.beforeMinutes * 60 * 1000);
+  const windowEnd = new Date(targetTime.getTime() + liveMode.afterMinutes * 60 * 1000);
+  const candidates = videos
+    .filter((video) => video.publishedAt >= windowStart && video.publishedAt <= windowEnd)
+    .sort((a, b) => b.publishedAt - a.publishedAt);
+  const keywordMatch = candidates.find((video) => hasLiveKeyword(video, liveMode.keywords));
+  const video = keywordMatch || candidates[0];
+
+  if (!video) {
+    console.log(`No ${liveMode.label} video found between ${formatLocalDateTime(windowStart)} and ${formatLocalDateTime(windowEnd)}.`);
+    return;
+  }
+
+  await sendVideoDigest({
+    video,
+    subjectPrefix: liveMode.subjectPrefix,
+    idempotencyKey: `micha-stocks:${formatLocalDate(targetTime)}:${modeName}:${video.videoId}`,
+  });
+}
+
+async function sendVideoDigest({ video, subjectPrefix, idempotencyKey }) {
   const videoPage = await fetchText(video.url);
   const pageDescription = extractMetaDescription(videoPage) || video.description;
   const transcript = await getTranscript(videoPage).catch((error) => {
@@ -65,10 +137,10 @@ async function main() {
   const sourceText = [video.title, pageDescription, transcript].filter(Boolean).join("\n\n");
   const digest = buildDigest(video, sourceText);
   await sendEmail({
-    subject: `Micha Stocks daily summary - ${video.title}`.slice(0, 180),
+    subject: `${subjectPrefix} - ${video.title}`.slice(0, 180),
     text: digest.text,
     html: digest.html,
-    idempotencyKey: `micha-stocks:${formatLocalDate(now)}:${video.videoId}`,
+    idempotencyKey,
   });
 }
 
@@ -204,6 +276,11 @@ function extractStockMentions(text) {
   }));
 }
 
+function hasLiveKeyword(video, keywords) {
+  const searchable = `${video.title} ${video.description}`.toLowerCase();
+  return keywords.some((keyword) => searchable.includes(keyword.toLowerCase()));
+}
+
 function describeMention(text, symbol) {
   const index = text.indexOf(symbol);
   const context = text.slice(Math.max(0, index - 180), Math.min(text.length, index + 260)).trim();
@@ -242,13 +319,17 @@ async function sendEmail({ subject, text, html, idempotencyKey }) {
 }
 
 function localDateAtHour(date, hour) {
+  return localDateAtTime(date, hour, 0);
+}
+
+function localDateAtTime(date, hour, minute) {
   const localDate = formatLocalDate(date);
   const [year, month, day] = localDate.split("-").map(Number);
-  const approxUtc = new Date(Date.UTC(year, month - 1, day, hour - 2, 0, 0));
+  const approxUtc = new Date(Date.UTC(year, month - 1, day, hour - 2, minute, 0));
   for (let offsetMinutes = -180; offsetMinutes <= 180; offsetMinutes += 15) {
     const candidate = new Date(approxUtc.getTime() + offsetMinutes * 60 * 1000);
     const parts = getLocalParts(candidate);
-    if (parts.year === year && parts.month === month && parts.day === day && parts.hour === hour) {
+    if (parts.year === year && parts.month === month && parts.day === day && parts.hour === hour && parts.minute === minute) {
       return candidate;
     }
   }
