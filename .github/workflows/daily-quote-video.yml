@@ -1,5 +1,12 @@
 name: Daily Quote Video Email
 
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-quote-video-email
+  cancel-in-progress: false
+
 on:
   workflow_dispatch:
     inputs:
@@ -32,6 +39,25 @@ jobs:
           DAILY_QUOTE_TO_EMAIL: ${{ vars.DIGEST_TO_EMAIL || 'ori.fellous21@gmail.com' }}
           FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
         run: python viral-video-automation/DAILY_QUOTE_VIDEO_EMAIL.py
+      - name: Upload daily quote video to YouTube
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_PRIVACY_STATUS: ${{ vars.YOUTUBE_PRIVACY_STATUS || 'public' }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+        run: python viral-video-automation/UPLOAD_DAILY_QUOTE_TO_YOUTUBE.py
+      - name: Record YouTube upload state
+        run: |
+          if [ -n "$(git status --short viral-video-automation/youtube_uploads)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add viral-video-automation/youtube_uploads
+            git commit -m "Record daily quote YouTube upload"
+            git push
+          else
+            echo "No YouTube upload state changes to commit."
+          fi
       - name: Keep rendered video for verification
         if: always()
         uses: actions/upload-artifact@v4
