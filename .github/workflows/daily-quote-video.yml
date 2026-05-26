@@ -8,12 +8,6 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/daily-quote-video.yml"
-      - "viral-video-automation/UPLOAD_DAILY_QUOTE_TO_YOUTUBE.py"
   workflow_dispatch:
     inputs:
       force_send:
@@ -43,7 +37,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM: ${{ vars.RESEND_FROM_EMAIL }}
           DAILY_QUOTE_TO_EMAIL: ${{ vars.DIGEST_TO_EMAIL || 'ori.fellous21@gmail.com' }}
-          FORCE_SEND: ${{ github.event_name == 'push' && '1' || github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
         run: python viral-video-automation/DAILY_QUOTE_VIDEO_EMAIL.py
       - name: Upload daily quote video to YouTube
         env:
@@ -51,7 +45,7 @@ jobs:
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
           YOUTUBE_PRIVACY_STATUS: ${{ vars.YOUTUBE_PRIVACY_STATUS || 'public' }}
-          FORCE_SEND: ${{ github.event_name == 'push' && '1' || github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
         run: python viral-video-automation/UPLOAD_DAILY_QUOTE_TO_YOUTUBE.py
       - name: Record YouTube upload state
         run: |
