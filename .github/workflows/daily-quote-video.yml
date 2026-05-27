@@ -8,6 +8,11 @@ concurrency:
   cancel-in-progress: false
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/daily-quote-video.yml"
   workflow_dispatch:
     inputs:
       force_send:
@@ -15,11 +20,10 @@ on:
         required: false
         default: "1"
   schedule:
-    # Same proven scheduling pattern as the existing Micha Stocks workflow:
-    # retry throughout the day because GitHub can delay scheduled workflows.
-    # The script skips anything before 16:00 Asia/Jerusalem and Resend's
-    # idempotency key prevents duplicate emails for the same date.
-    - cron: "17,47 * * * *"
+    # GitHub scheduled workflows can be delayed or occasionally skipped.
+    # Retry frequently during the Israel afternoon/evening; the scripts still
+    # skip before 16:00 Asia/Jerusalem and state/idempotency prevent duplicates.
+    - cron: "*/10 12-22 * * *"
 
 jobs:
   send-video:
@@ -37,7 +41,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM: ${{ vars.RESEND_FROM_EMAIL }}
           DAILY_QUOTE_TO_EMAIL: ${{ vars.DIGEST_TO_EMAIL || 'ori.fellous21@gmail.com' }}
-          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+          FORCE_SEND: ${{ github.event_name == 'push' && '1' || github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
         run: python viral-video-automation/DAILY_QUOTE_VIDEO_EMAIL.py
       - name: Upload daily quote video to YouTube
         env:
@@ -45,7 +49,7 @@ jobs:
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
           YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
           YOUTUBE_PRIVACY_STATUS: ${{ vars.YOUTUBE_PRIVACY_STATUS || 'public' }}
-          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+          FORCE_SEND: ${{ github.event_name == 'push' && '1' || github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
         run: python viral-video-automation/UPLOAD_DAILY_QUOTE_TO_YOUTUBE.py
       - name: Record YouTube upload state
         run: |
