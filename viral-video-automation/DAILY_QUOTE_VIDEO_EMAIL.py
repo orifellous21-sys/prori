@@ -126,6 +126,11 @@ def main():
         return
 
     date_key = local_date_key(now)
+    state_path = os.path.join(ROOT, "youtube_uploads", f"{date_key}.json")
+    if not args.force_send and os.path.exists(state_path):
+        print(f"Skipping: YouTube upload state already exists for {date_key}.")
+        return
+
     quote = choose_quote(date_key)
     background = make_background_variant(date_key)
     output_path = os.path.join(OUTPUT, f"daily_quote_youtube_{date_key}.mp4")
