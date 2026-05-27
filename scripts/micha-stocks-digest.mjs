@@ -22,6 +22,60 @@ const LIVE_MODES = {
     keywords: ["closing", "market close", "close live", "\u05e1\u05d2\u05d9\u05e8\u05d4", "\u05e1\u05d2\u05d9\u05e8\u05ea"],
   },
 };
+const STOCK_ALIASES = [
+  { symbol: "NVDA", name: "Nvidia", aliases: ["nvidia", "n vidia", "\u05d0\u05e0\u05d1\u05d9\u05d3\u05d9\u05d4", "\u05e0\u05d1\u05d9\u05d3\u05d9\u05d4"] },
+  { symbol: "TSLA", name: "Tesla", aliases: ["tesla", "\u05d8\u05e1\u05dc\u05d4"] },
+  { symbol: "AAPL", name: "Apple", aliases: ["apple", "\u05d0\u05e4\u05dc"] },
+  { symbol: "MSFT", name: "Microsoft", aliases: ["microsoft", "\u05de\u05d9\u05e7\u05e8\u05d5\u05e1\u05d5\u05e4\u05d8"] },
+  { symbol: "AMZN", name: "Amazon", aliases: ["amazon", "\u05d0\u05de\u05d6\u05d5\u05df"] },
+  { symbol: "GOOGL", name: "Alphabet/Google", aliases: ["google", "alphabet", "\u05d2\u05d5\u05d2\u05dc", "\u05d0\u05dc\u05e4\u05d1\u05d9\u05ea"] },
+  { symbol: "META", name: "Meta", aliases: ["meta", "facebook", "\u05de\u05d8\u05d0", "\u05e4\u05d9\u05d9\u05e1\u05d1\u05d5\u05e7"] },
+  { symbol: "PLTR", name: "Palantir", aliases: ["palantir", "\u05e4\u05dc\u05e0\u05d8\u05d9\u05e8"] },
+  { symbol: "AMD", name: "Advanced Micro Devices", aliases: ["advanced micro devices", "\u05d0\u05d9\u05d9 \u05d0\u05dd \u05d3\u05d9"] },
+  { symbol: "AVGO", name: "Broadcom", aliases: ["broadcom", "\u05d1\u05e8\u05d5\u05d3\u05e7\u05d5\u05dd"] },
+  { symbol: "SMCI", name: "Super Micro", aliases: ["super micro", "supermicro", "\u05e1\u05d5\u05e4\u05e8 \u05de\u05d9\u05e7\u05e8\u05d5"] },
+  { symbol: "MSTR", name: "MicroStrategy/Strategy", aliases: ["microstrategy", "micro strategy", "strategy stock", "\u05de\u05d9\u05d9\u05e7\u05e8\u05d5\u05e1\u05d8\u05e8\u05d8\u05d2\u05d9"] },
+  { symbol: "COIN", name: "Coinbase", aliases: ["coinbase", "\u05e7\u05d5\u05d9\u05e0\u05d1\u05d9\u05d9\u05e1"] },
+  { symbol: "HOOD", name: "Robinhood", aliases: ["robinhood", "robin hood", "\u05e8\u05d5\u05d1\u05d9\u05df \u05d4\u05d5\u05d3"] },
+  { symbol: "NFLX", name: "Netflix", aliases: ["netflix", "\u05e0\u05d8\u05e4\u05dc\u05d9\u05e7\u05e1"] },
+  { symbol: "CRM", name: "Salesforce", aliases: ["salesforce", "sales force"] },
+  { symbol: "ORCL", name: "Oracle", aliases: ["oracle", "\u05d0\u05d5\u05e8\u05e7\u05dc"] },
+  { symbol: "INTC", name: "Intel", aliases: ["intel", "\u05d0\u05d9\u05e0\u05d8\u05dc"] },
+  { symbol: "TSM", name: "Taiwan Semiconductor", aliases: ["taiwan semiconductor", "tsmc"] },
+  { symbol: "MU", name: "Micron", aliases: ["micron", "\u05de\u05d9\u05d9\u05e7\u05e8\u05d5\u05df"] },
+  { symbol: "QCOM", name: "Qualcomm", aliases: ["qualcomm", "\u05e7\u05d5\u05d5\u05d0\u05dc\u05e7\u05d5\u05dd"] },
+  { symbol: "ARM", name: "Arm", aliases: ["arm holdings", "arm stock"] },
+  { symbol: "SHOP", name: "Shopify", aliases: ["shopify"] },
+  { symbol: "UBER", name: "Uber", aliases: ["uber"] },
+  { symbol: "ABNB", name: "Airbnb", aliases: ["airbnb", "air bnb"] },
+  { symbol: "RDDT", name: "Reddit", aliases: ["reddit"] },
+  { symbol: "RBLX", name: "Roblox", aliases: ["roblox"] },
+  { symbol: "SOFI", name: "SoFi", aliases: ["sofi", "so fi"] },
+  { symbol: "UPST", name: "Upstart", aliases: ["upstart"] },
+  { symbol: "AFRM", name: "Affirm", aliases: ["affirm"] },
+  { symbol: "MARA", name: "MARA Holdings", aliases: ["mara"] },
+  { symbol: "RIOT", name: "Riot Platforms", aliases: ["riot platforms", "riot stock"] },
+  { symbol: "CLSK", name: "CleanSpark", aliases: ["cleanspark", "clean spark"] },
+  { symbol: "IONQ", name: "IonQ", aliases: ["ionq", "ion q"] },
+  { symbol: "RGTI", name: "Rigetti", aliases: ["rigetti"] },
+  { symbol: "QBTS", name: "D-Wave Quantum", aliases: ["d-wave", "d wave", "dwave"] },
+  { symbol: "RKLB", name: "Rocket Lab", aliases: ["rocket lab"] },
+  { symbol: "LUNR", name: "Intuitive Machines", aliases: ["intuitive machines", "lunar"] },
+  { symbol: "ASTS", name: "AST SpaceMobile", aliases: ["ast spacemobile", "ast space mobile"] },
+  { symbol: "CRWD", name: "CrowdStrike", aliases: ["crowdstrike", "crowd strike"] },
+  { symbol: "PANW", name: "Palo Alto Networks", aliases: ["palo alto networks"] },
+  { symbol: "SNOW", name: "Snowflake", aliases: ["snowflake"] },
+  { symbol: "DDOG", name: "Datadog", aliases: ["datadog", "data dog"] },
+  { symbol: "NET", name: "Cloudflare", aliases: ["cloudflare", "cloud flare"] },
+  { symbol: "MDB", name: "MongoDB", aliases: ["mongodb", "mongo db"] },
+  { symbol: "NOW", name: "ServiceNow", aliases: ["servicenow", "service now"] },
+  { symbol: "VRT", name: "Vertiv", aliases: ["vertiv"] },
+  { symbol: "DELL", name: "Dell", aliases: ["dell"] },
+  { symbol: "HIMS", name: "Hims & Hers", aliases: ["hims", "hims and hers", "hims & hers"] },
+  { symbol: "APP", name: "AppLovin", aliases: ["applovin", "app lovin"] },
+  { symbol: "NVO", name: "Novo Nordisk", aliases: ["novo nordisk"] },
+  { symbol: "LLY", name: "Eli Lilly", aliases: ["eli lilly", "lilly"] },
+];
 
 const config = {
   resendApiKey: process.env.RESEND_API_KEY,
@@ -33,17 +87,19 @@ const config = {
   forceSendOutsideNine: process.env.FORCE_SEND === "1",
 };
 
-main().catch(async (error) => {
-  console.error(error);
-  if (config.resendApiKey) {
-    await sendEmail({
-      subject: "Micha Stocks daily summary - failed",
-      text: `The Micha Stocks digest failed.\n\n${error.stack || error.message}`,
-      html: `<p>The Micha Stocks digest failed.</p><pre>${escapeHtml(error.stack || error.message)}</pre>`,
-    });
-  }
-  process.exit(1);
-});
+if (process.env.SKIP_MICHA_MAIN !== "1") {
+  main().catch(async (error) => {
+    console.error(error);
+    if (config.resendApiKey) {
+      await sendEmail({
+        subject: "Micha Stocks daily summary - failed",
+        text: `The Micha Stocks digest failed.\n\n${error.stack || error.message}`,
+        html: `<p>The Micha Stocks digest failed.</p><pre>${escapeHtml(error.stack || error.message)}</pre>`,
+      });
+    }
+    process.exit(1);
+  });
+}
 
 async function main() {
   if (!config.resendApiKey) {
@@ -177,11 +233,45 @@ async function getTranscript(videoPageHtml) {
     tracks[0];
   if (!track?.baseUrl) return "";
 
-  const transcriptXml = await fetchText(track.baseUrl);
-  return [...transcriptXml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)]
+  return fetchTranscriptText(track.baseUrl);
+}
+
+async function fetchTranscriptText(baseUrl) {
+  const urls = [baseUrl, addQueryParam(baseUrl, "fmt", "json3")];
+  for (const url of urls) {
+    const transcriptBody = await fetchText(url).catch(() => "");
+    if (!transcriptBody) continue;
+
+    const parsedJson = parseJsonTranscript(transcriptBody);
+    if (parsedJson) return parsedJson;
+
+    const parsedXml = parseXmlTranscript(transcriptBody);
+    if (parsedXml) return parsedXml;
+  }
+  return "";
+}
+
+function parseJsonTranscript(value) {
+  if (!value.trim().startsWith("{")) return "";
+  const data = JSON.parse(value);
+  return (data.events || [])
+    .flatMap((event) => event.segs || [])
+    .map((segment) => segment.utf8 || "")
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseXmlTranscript(value) {
+  return [...value.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)]
     .map(([, text]) => decodeXml(text.replace(/\n/g, " ")).trim())
     .filter(Boolean)
     .join(" ");
+}
+
+function addQueryParam(url, key, value) {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
 }
 
 function extractJsonArrayAfter(text, marker) {
@@ -265,15 +355,34 @@ function extractStockMentions(text) {
     "AM", "PM", "CEO", "CFO", "ETF", "IPO", "EPS", "GDP", "USA", "USD", "SEC", "ATH",
     "AI", "API", "URL", "RSS", "TV", "CNBC", "NYSE", "NASDAQ",
   ]);
-  const matches = [...text.matchAll(/(?:\$|NASDAQ:|NYSE:)?\b([A-Z]{2,5})\b/g)]
-    .map((match) => match[1])
-    .filter((symbol) => !stopWords.has(symbol));
+  const detected = new Map();
 
-  const unique = [...new Set(matches)].slice(0, 25);
-  return unique.map((symbol) => ({
-    symbol,
-    note: describeMention(text, symbol),
-  }));
+  for (const match of text.matchAll(/(?:\$|NASDAQ:|NYSE:)?\b([A-Z]{2,5})\b/g)) {
+    const symbol = match[1];
+    if (!stopWords.has(symbol)) {
+      addDetectedStock(detected, { symbol, matchedTerm: symbol, index: match.index ?? 0 });
+    }
+  }
+
+  for (const stock of STOCK_ALIASES) {
+    const match = findAliasMatch(text, stock.aliases);
+    if (match) {
+      addDetectedStock(detected, {
+        symbol: stock.symbol,
+        name: stock.name,
+        matchedTerm: match.term,
+        index: match.index,
+      });
+    }
+  }
+
+  return [...detected.values()]
+    .sort((a, b) => a.index - b.index)
+    .slice(0, 25)
+    .map((stock) => ({
+      symbol: stock.name ? `${stock.symbol} (${stock.name})` : stock.symbol,
+      note: describeMention(text, stock.symbol, stock.matchedTerm),
+    }));
 }
 
 function hasLiveKeyword(video, keywords) {
@@ -281,17 +390,40 @@ function hasLiveKeyword(video, keywords) {
   return keywords.some((keyword) => searchable.includes(keyword.toLowerCase()));
 }
 
-function describeMention(text, symbol) {
-  const index = text.indexOf(symbol);
-  const context = text.slice(Math.max(0, index - 180), Math.min(text.length, index + 260)).trim();
-  const lower = context.toLowerCase();
-  let tone = "neutral/unclear";
-  if (/(breakout|strong|uptrend|beat|growth|bull|positive|buy|support|פריצה|חזקה|עלייה|חיובי)/i.test(lower)) {
-    tone = "positive/watchlist";
-  } else if (/(risk|down|drop|weak|bear|sell|below|warning|miss|סיכון|ירידה|חלשה|אזהרה|שבירה)/i.test(lower)) {
-    tone = "cautious/negative";
+function addDetectedStock(detected, stock) {
+  const existing = detected.get(stock.symbol);
+  if (!existing || stock.index < existing.index || (stock.name && !existing.name)) {
+    detected.set(stock.symbol, stock);
   }
-  return `${tone}. Context: ${context || "mentioned, but not enough context was available."}`;
+}
+
+function findAliasMatch(text, aliases) {
+  let best = null;
+  for (const alias of aliases) {
+    const match = findTerm(text, alias);
+    if (match && (!best || match.index < best.index)) best = match;
+  }
+  return best;
+}
+
+function findTerm(text, term) {
+  const escaped = escapeRegExp(term);
+  const isAsciiTerm = /^[a-z0-9 .&-]+$/i.test(term);
+  const boundary = isAsciiTerm ? "(?<![A-Za-z0-9])" : "";
+  const endBoundary = isAsciiTerm ? "(?![A-Za-z0-9])" : "";
+  const regex = new RegExp(`${boundary}${escaped}${endBoundary}`, "i");
+  const match = text.match(regex);
+  return match ? { term: match[0], index: match.index ?? 0 } : null;
+}
+
+function describeMention(text, symbol, matchedTerm = symbol) {
+  const index = findTerm(text, matchedTerm)?.index ?? findTerm(text, symbol)?.index ?? 0;
+  const context = text.slice(Math.max(0, index - 180), Math.min(text.length, index + 260)).trim();
+  return `Mention context: ${context || "mentioned, but not enough context was available."}`;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 async function sendEmail({ subject, text, html, idempotencyKey }) {
@@ -414,3 +546,5 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+export { extractStockMentions, parseJsonTranscript, parseXmlTranscript };
