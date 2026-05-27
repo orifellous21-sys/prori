@@ -145,6 +145,11 @@ def upload_video(upload_url, access_token, video_path):
 
 
 def main():
+    if os.environ.get("YOUTUBE_TOKEN_CHECK_ONLY") == "1":
+        get_access_token()
+        print(json.dumps({"ok": True, "youtube_oauth": "token refresh succeeded"}, indent=2))
+        return
+
     now = local_now()
     force_send = os.environ.get("FORCE_SEND") == "1"
     if not force_send and now.hour < 16:
