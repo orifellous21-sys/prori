@@ -16,6 +16,57 @@ OUTPUT = os.path.join(ROOT, "output", "daily_quote")
 TIME_ZONE = ZoneInfo("Asia/Jerusalem")
 DEFAULT_TO = "ori.fellous21@gmail.com"
 
+VISUAL_PROFILES = [
+    {
+        "name": "warm_gold",
+        "tint": (214, 164, 92),
+        "tint_strength": 0.045,
+        "brightness": (0.98, 1.04),
+        "contrast": (0.98, 1.05),
+        "color": (1.00, 1.08),
+    },
+    {
+        "name": "muted_blue",
+        "tint": (112, 137, 158),
+        "tint_strength": 0.040,
+        "brightness": (0.97, 1.03),
+        "contrast": (0.97, 1.04),
+        "color": (0.92, 1.00),
+    },
+    {
+        "name": "soft_olive",
+        "tint": (148, 143, 92),
+        "tint_strength": 0.035,
+        "brightness": (0.98, 1.04),
+        "contrast": (0.97, 1.04),
+        "color": (0.96, 1.04),
+    },
+    {
+        "name": "subtle_ember",
+        "tint": (174, 92, 54),
+        "tint_strength": 0.040,
+        "brightness": (0.96, 1.02),
+        "contrast": (1.00, 1.07),
+        "color": (1.00, 1.08),
+    },
+    {
+        "name": "dusty_rose",
+        "tint": (164, 112, 118),
+        "tint_strength": 0.035,
+        "brightness": (0.98, 1.04),
+        "contrast": (0.98, 1.05),
+        "color": (0.96, 1.05),
+    },
+    {
+        "name": "aged_ivory",
+        "tint": (210, 198, 170),
+        "tint_strength": 0.030,
+        "brightness": (0.99, 1.05),
+        "contrast": (0.98, 1.06),
+        "color": (0.90, 0.98),
+    },
+]
+
 QUOTES = [
     {
         "speaker": "Frederick Douglass",
@@ -82,6 +133,11 @@ def choose_quote(date_key):
     return QUOTES[int(digest[:8], 16) % len(QUOTES)]
 
 
+def choose_visual_profile(date_key):
+    digest = hashlib.sha256(f"visual:{date_key}".encode("utf-8")).hexdigest()
+    return VISUAL_PROFILES[int(digest[:8], 16) % len(VISUAL_PROFILES)]
+
+
 def make_background_variant(date_key):
     source = os.path.join(ASSETS, "fresco-background-no-text.png")
     if not os.path.exists(source):
@@ -89,9 +145,10 @@ def make_background_variant(date_key):
 
     os.makedirs(OUTPUT, exist_ok=True)
     rng = random.Random(date_key)
+    profile = choose_visual_profile(date_key)
     img = Image.open(source).convert("RGB")
 
-    zoom = 1.015 + rng.random() * 0.045
+    zoom = 1.015 + rng.random() * 0.055
     resized = img.resize((int(img.width * zoom), int(img.height * zoom)), Image.Resampling.LANCZOS)
     max_left = max(0, resized.width - img.width)
     max_top = max(0, resized.height - img.height)
@@ -99,15 +156,17 @@ def make_background_variant(date_key):
     top = rng.randint(0, max_top) if max_top else 0
     img = resized.crop((left, top, left + img.width, top + img.height))
 
-    img = ImageEnhance.Contrast(img).enhance(0.97 + rng.random() * 0.12)
-    img = ImageEnhance.Brightness(img).enhance(0.94 + rng.random() * 0.08)
-    img = ImageEnhance.Color(img).enhance(0.9 + rng.random() * 0.14)
+    tint = Image.new("RGB", img.size, profile["tint"])
+    img = Image.blend(img, tint, profile["tint_strength"])
+    img = ImageEnhance.Contrast(img).enhance(rng.uniform(*profile["contrast"]))
+    img = ImageEnhance.Brightness(img).enhance(rng.uniform(*profile["brightness"]))
+    img = ImageEnhance.Color(img).enhance(rng.uniform(*profile["color"]))
     if rng.random() > 0.5:
         img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=65, threshold=4))
 
     path = os.path.join(OUTPUT, f"background_{date_key}.png")
     img.save(path, "PNG")
-    return path
+    return path, profile["name"]
 
 
 def run(command, env):
@@ -132,12 +191,13 @@ def main():
         return
 
     quote = choose_quote(date_key)
-    background = make_background_variant(date_key)
+    background, visual_profile = make_background_variant(date_key)
     output_path = os.path.join(OUTPUT, f"daily_quote_youtube_{date_key}.mp4")
 
     env = os.environ.copy()
     env["QUOTE_TEXT"] = quote["text"]
     env["QUOTE_SPEAKER"] = quote["speaker"]
+    env["VIDEO_VISUAL_PROFILE"] = visual_profile
     run(
         [
             sys.executable,

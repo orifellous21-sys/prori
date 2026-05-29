@@ -28,6 +28,52 @@ QUOTE = os.environ.get(
     "plowing up the ground.",
 )
 SPEAKER = os.environ.get("QUOTE_SPEAKER", "Frederick Douglass")
+VISUAL_PROFILE = os.environ.get("VIDEO_VISUAL_PROFILE", "warm_gold")
+
+TEXT_STYLES = {
+    "warm_gold": {
+        "quote": (255, 250, 238, 255),
+        "speaker": (226, 184, 116, 255),
+        "shadow": (42, 27, 18, 190),
+        "overlay": (0, 0, 0, 104),
+        "quote_size": 64,
+    },
+    "muted_blue": {
+        "quote": (238, 246, 248, 255),
+        "speaker": (176, 206, 214, 255),
+        "shadow": (10, 24, 34, 205),
+        "overlay": (0, 0, 0, 108),
+        "quote_size": 62,
+    },
+    "soft_olive": {
+        "quote": (250, 244, 214, 255),
+        "speaker": (205, 196, 132, 255),
+        "shadow": (33, 33, 22, 190),
+        "overlay": (0, 0, 0, 104),
+        "quote_size": 63,
+    },
+    "subtle_ember": {
+        "quote": (255, 241, 226, 255),
+        "speaker": (230, 153, 104, 255),
+        "shadow": (45, 17, 10, 200),
+        "overlay": (0, 0, 0, 110),
+        "quote_size": 64,
+    },
+    "dusty_rose": {
+        "quote": (250, 238, 238, 255),
+        "speaker": (219, 161, 168, 255),
+        "shadow": (38, 21, 26, 190),
+        "overlay": (0, 0, 0, 104),
+        "quote_size": 62,
+    },
+    "aged_ivory": {
+        "quote": (248, 242, 222, 255),
+        "speaker": (207, 192, 151, 255),
+        "shadow": (20, 20, 20, 210),
+        "overlay": (0, 0, 0, 106),
+        "quote_size": 61,
+    },
+}
 
 
 def font(size):
@@ -75,29 +121,47 @@ def wrap(draw, text, fnt, max_width):
     return lines
 
 
-def draw_centered(draw, lines, y, fnt, fill, line_gap):
+def draw_text_shadow(draw, xy, text, fnt, fill, shadow):
+    x, y = xy
+    for dx, dy in [(-2, 3), (2, 3), (0, 4)]:
+        draw.text((x + dx, y + dy), text, font=fnt, fill=shadow)
+    draw.text((x, y), text, font=fnt, fill=fill)
+
+
+def draw_centered(draw, lines, y, fnt, fill, line_gap, shadow):
     for line in lines:
         box = draw.textbbox((0, 0), line, font=fnt)
         x = (WIDTH - (box[2] - box[0])) // 2
-        draw.text((x, y), line, font=fnt, fill=fill)
+        draw_text_shadow(draw, (x, y), line, fnt, fill, shadow)
         y += (box[3] - box[1]) + line_gap
     return y
 
 
+def quote_layout(draw, text, max_width, max_lines):
+    for size in range(TEXT_STYLES.get(VISUAL_PROFILE, TEXT_STYLES["warm_gold"])["quote_size"], 46, -2):
+        fnt = font(size)
+        lines = wrap(draw, text, fnt, max_width)
+        if len(lines) <= max_lines:
+            return fnt, lines
+    fnt = font(46)
+    return fnt, wrap(draw, text, fnt, max_width)
+
+
 def make_poster(background, poster):
+    style = TEXT_STYLES.get(VISUAL_PROFILE, TEXT_STYLES["warm_gold"])
     img = cover(Image.open(background).convert("RGB")).convert("RGBA")
-    img = Image.alpha_composite(img, Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 108)))
+    img = Image.alpha_composite(img, Image.new("RGBA", (WIDTH, HEIGHT), style["overlay"]))
     draw = ImageDraw.Draw(img)
-    quote_font = font(66)
+    quote_font, lines = quote_layout(draw, f'"{QUOTE}"', 835, 9)
     speaker_font = font(40)
-    lines = wrap(draw, f'"{QUOTE}"', quote_font, 835)
     y = 218
-    draw_centered(draw, lines, y, quote_font, (255, 255, 255, 255), 23)
+    y = draw_centered(draw, lines, y, quote_font, style["quote"], 23, style["shadow"])
 
     speaker = f"- {SPEAKER}"
     box = draw.textbbox((0, 0), speaker, font=speaker_font)
     sx = (WIDTH - (box[2] - box[0])) // 2
-    draw.text((sx, 1050), speaker, font=speaker_font, fill=(255, 255, 255, 255))
+    sy = max(1000, min(1190, y + 118))
+    draw_text_shadow(draw, (sx, sy), speaker, speaker_font, style["speaker"], style["shadow"])
     img.convert("RGB").save(poster, "PNG")
 
 
