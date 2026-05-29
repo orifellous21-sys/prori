@@ -46,16 +46,25 @@ jobs:
           YOUTUBE_PRIVACY_STATUS: ${{ vars.YOUTUBE_PRIVACY_STATUS || 'public' }}
           FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
         run: python viral-video-automation/UPLOAD_DAILY_QUOTE_TO_YOUTUBE.py
+      - name: Upload daily quote video to TikTok
+        if: ${{ vars.TIKTOK_UPLOAD_ENABLED == '1' }}
+        env:
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+          TIKTOK_PRIVACY_LEVEL: ${{ vars.TIKTOK_PRIVACY_LEVEL || 'PUBLIC_TO_EVERYONE' }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || '0' }}
+        run: python viral-video-automation/UPLOAD_DAILY_QUOTE_TO_TIKTOK.py
       - name: Record YouTube upload state
         run: |
-          if [ -n "$(git status --short viral-video-automation/youtube_uploads)" ]; then
+          if [ -n "$(git status --short viral-video-automation/youtube_uploads viral-video-automation/tiktok_uploads)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add viral-video-automation/youtube_uploads
-            git commit -m "Record daily quote YouTube upload"
+            git add viral-video-automation/youtube_uploads viral-video-automation/tiktok_uploads
+            git commit -m "Record daily quote social upload"
             git push
           else
-            echo "No YouTube upload state changes to commit."
+            echo "No social upload state changes to commit."
           fi
       - name: Keep rendered video for verification
         if: always()
