@@ -27,9 +27,9 @@ const STOCK_ALIASES = [
   { symbol: "TSLA", name: "Tesla", aliases: ["tesla", "\u05d8\u05e1\u05dc\u05d4"] },
   { symbol: "AAPL", name: "Apple", aliases: ["apple", "\u05d0\u05e4\u05dc"] },
   { symbol: "MSFT", name: "Microsoft", aliases: ["microsoft", "\u05de\u05d9\u05e7\u05e8\u05d5\u05e1\u05d5\u05e4\u05d8"] },
-  { symbol: "AMZN", name: "Amazon", aliases: ["amazon", "\u05d0\u05de\u05d6\u05d5\u05df"] },
+  { symbol: "AMZN", name: "Amazon", aliases: ["amazon", "aws", "\u05d0\u05de\u05d6\u05d5\u05df"] },
   { symbol: "GOOGL", name: "Alphabet/Google", aliases: ["google", "alphabet", "\u05d2\u05d5\u05d2\u05dc", "\u05d0\u05dc\u05e4\u05d1\u05d9\u05ea"] },
-  { symbol: "META", name: "Meta", aliases: ["meta", "facebook", "\u05de\u05d8\u05d0", "\u05e4\u05d9\u05d9\u05e1\u05d1\u05d5\u05e7"] },
+  { symbol: "META", name: "Meta", aliases: ["meta", "facebook", "\u05de\u05d8\u05d0", "\u05de\u05d8\u05d4", "\u05e4\u05d9\u05d9\u05e1\u05d1\u05d5\u05e7"] },
   { symbol: "PLTR", name: "Palantir", aliases: ["palantir", "\u05e4\u05dc\u05e0\u05d8\u05d9\u05e8"] },
   { symbol: "AMD", name: "Advanced Micro Devices", aliases: ["advanced micro devices", "\u05d0\u05d9\u05d9 \u05d0\u05dd \u05d3\u05d9"] },
   { symbol: "AVGO", name: "Broadcom", aliases: ["broadcom", "\u05d1\u05e8\u05d5\u05d3\u05e7\u05d5\u05dd"] },
@@ -43,6 +43,7 @@ const STOCK_ALIASES = [
   { symbol: "INTC", name: "Intel", aliases: ["intel", "\u05d0\u05d9\u05e0\u05d8\u05dc"] },
   { symbol: "TSM", name: "Taiwan Semiconductor", aliases: ["taiwan semiconductor", "tsmc"] },
   { symbol: "MU", name: "Micron", aliases: ["micron", "\u05de\u05d9\u05d9\u05e7\u05e8\u05d5\u05df"] },
+  { symbol: "NBIS", name: "Nebius", aliases: ["nebius", "\u05e0\u05d1\u05d9\u05d5\u05e1"] },
   { symbol: "QCOM", name: "Qualcomm", aliases: ["qualcomm", "\u05e7\u05d5\u05d5\u05d0\u05dc\u05e7\u05d5\u05dd"] },
   { symbol: "ARM", name: "Arm", aliases: ["arm holdings", "arm stock"] },
   { symbol: "SHOP", name: "Shopify", aliases: ["shopify"] },
@@ -64,13 +65,14 @@ const STOCK_ALIASES = [
   { symbol: "ASTS", name: "AST SpaceMobile", aliases: ["ast spacemobile", "ast space mobile"] },
   { symbol: "CRWD", name: "CrowdStrike", aliases: ["crowdstrike", "crowd strike"] },
   { symbol: "PANW", name: "Palo Alto Networks", aliases: ["palo alto networks"] },
-  { symbol: "SNOW", name: "Snowflake", aliases: ["snowflake"] },
+  { symbol: "SNOW", name: "Snowflake", aliases: ["snowflake", "\u05e1\u05e0\u05d5\u05e4\u05dc\u05d9\u05d9\u05e7"] },
+  { symbol: "ZS", name: "Zscaler", aliases: ["zscaler", "z scaler", "\u05d6\u05d9-\u05e1\u05e7\u05d9\u05d9\u05dc\u05e8", "\u05d6\u05d9 \u05e1\u05e7\u05d9\u05d9\u05dc\u05e8", "\u05d6\u05d9\u05e1\u05e7\u05d9\u05d9\u05dc\u05e8"] },
   { symbol: "DDOG", name: "Datadog", aliases: ["datadog", "data dog"] },
   { symbol: "NET", name: "Cloudflare", aliases: ["cloudflare", "cloud flare"] },
   { symbol: "MDB", name: "MongoDB", aliases: ["mongodb", "mongo db"] },
   { symbol: "NOW", name: "ServiceNow", aliases: ["servicenow", "service now"] },
   { symbol: "VRT", name: "Vertiv", aliases: ["vertiv"] },
-  { symbol: "DELL", name: "Dell", aliases: ["dell"] },
+  { symbol: "DELL", name: "Dell", aliases: ["dell", "\u05d3\u05dc"] },
   { symbol: "HIMS", name: "Hims & Hers", aliases: ["hims", "hims and hers", "hims & hers"] },
   { symbol: "APP", name: "AppLovin", aliases: ["applovin", "app lovin"] },
   { symbol: "NVO", name: "Novo Nordisk", aliases: ["novo nordisk"] },
@@ -184,7 +186,7 @@ async function sendLiveDigest({ now, videos, liveMode, modeName }) {
 
 async function sendVideoDigest({ video, subjectPrefix, idempotencyKey }) {
   const videoPage = await fetchText(video.url);
-  const pageDescription = extractMetaDescription(videoPage) || video.description;
+  const pageDescription = extractVideoDescription(videoPage) || video.description;
   const transcript = await getTranscript(videoPage).catch((error) => {
     console.warn(`Transcript unavailable: ${error.message}`);
     return "";
@@ -353,7 +355,7 @@ function summarize(text) {
 function extractStockMentions(text) {
   const stopWords = new Set([
     "AM", "PM", "CEO", "CFO", "ETF", "IPO", "EPS", "GDP", "USA", "USD", "SEC", "ATH",
-    "AI", "API", "URL", "RSS", "TV", "CNBC", "NYSE", "NASDAQ",
+    "AI", "API", "URL", "RSS", "TV", "CNBC", "NYSE", "NASDAQ", "AWS", "PLUS", "CTA",
   ]);
   const detected = new Map();
 
@@ -409,9 +411,9 @@ function findAliasMatch(text, aliases) {
 function findTerm(text, term) {
   const escaped = escapeRegExp(term);
   const isAsciiTerm = /^[a-z0-9 .&-]+$/i.test(term);
-  const boundary = isAsciiTerm ? "(?<![A-Za-z0-9])" : "";
-  const endBoundary = isAsciiTerm ? "(?![A-Za-z0-9])" : "";
-  const regex = new RegExp(`${boundary}${escaped}${endBoundary}`, "i");
+  const boundary = isAsciiTerm ? "(?<![A-Za-z0-9])" : "(?<![\\p{L}\\p{N}])";
+  const endBoundary = isAsciiTerm ? "(?![A-Za-z0-9])" : "(?![\\p{L}\\p{N}])";
+  const regex = new RegExp(`${boundary}${escaped}${endBoundary}`, isAsciiTerm ? "i" : "iu");
   const match = text.match(regex);
   return match ? { term: match[0], index: match.index ?? 0 } : null;
 }
@@ -522,6 +524,66 @@ function textBetween(text, start, end) {
   return text.slice(contentStart, endIndex);
 }
 
+function extractVideoDescription(html) {
+  return extractPlayerShortDescription(html) || extractMetaDescription(html);
+}
+
+function extractPlayerShortDescription(html) {
+  const playerResponse = extractJsonObjectAfter(html, "var ytInitialPlayerResponse = ") ||
+    extractJsonObjectAfter(html, "ytInitialPlayerResponse = ");
+  const description = playerResponse?.videoDetails?.shortDescription || "";
+  return extractVideoSpecificDescription(description) || description;
+}
+
+function extractVideoSpecificDescription(description) {
+  const markers = ["📌 על הסרטון הזה:", "על הסרטון הזה:"];
+  const marker = markers.find((item) => description.includes(item));
+  if (!marker) return "";
+
+  const start = description.indexOf(marker) + marker.length;
+  const rest = description.slice(start).trim();
+  const endMarkers = ["\n⸻", "\n🛡", "\n🌐", "\n⚠️"];
+  const end = endMarkers
+    .map((item) => rest.indexOf(item))
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b)[0];
+  return (end >= 0 ? rest.slice(0, end) : rest).trim();
+}
+
+function extractJsonObjectAfter(text, marker) {
+  const markerIndex = text.indexOf(marker);
+  if (markerIndex === -1) return null;
+  const start = text.indexOf("{", markerIndex);
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === '"') inString = !inString;
+    if (inString) continue;
+    if (char === "{") depth += 1;
+    if (char === "}") depth -= 1;
+    if (depth === 0) {
+      try {
+        return JSON.parse(text.slice(start, index + 1));
+      } catch {
+        return null;
+      }
+    }
+  }
+  return null;
+}
+
 function extractMetaDescription(html) {
   const match = html.match(/<meta\s+name="description"\s+content="([^"]*)"/i) ||
     html.match(/<meta\s+property="og:description"\s+content="([^"]*)"/i);
@@ -547,4 +609,4 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
-export { extractStockMentions, parseJsonTranscript, parseXmlTranscript };
+export { buildDigest, extractStockMentions, extractVideoDescription, parseJsonTranscript, parseXmlTranscript };
