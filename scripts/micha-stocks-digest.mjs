@@ -194,6 +194,7 @@ async function sendVideoDigest({ video, subjectPrefix, idempotencyKey }) {
 
   const sourceText = [video.title, pageDescription, transcript].filter(Boolean).join("\n\n");
   const digest = buildDigest(video, sourceText);
+  console.log(`Digest source lengths: description=${pageDescription.length}, transcript=${transcript.length}, stocks=${digest.stockCount}`);
   await sendEmail({
     subject: `${subjectPrefix} - ${video.title}`.slice(0, 180),
     text: digest.text,
@@ -338,7 +339,7 @@ function buildDigest(video, sourceText) {
     <p><em>This is a summary of the video content, not financial advice.</em></p>
   `;
 
-  return { text, html };
+  return { text, html, stockCount: stocks.length };
 }
 
 function summarize(text) {
@@ -531,8 +532,36 @@ function extractVideoDescription(html) {
 function extractPlayerShortDescription(html) {
   const playerResponse = extractJsonObjectAfter(html, "var ytInitialPlayerResponse = ") ||
     extractJsonObjectAfter(html, "ytInitialPlayerResponse = ");
-  const description = playerResponse?.videoDetails?.shortDescription || "";
+  const description = playerResponse?.videoDetails?.shortDescription ||
+    extractJsonStringAfter(html, '"shortDescription":"') ||
+    "";
   return extractVideoSpecificDescription(description) || description;
+}
+
+function extractJsonStringAfter(text, marker) {
+  const markerIndex = text.indexOf(marker);
+  if (markerIndex === -1) return "";
+  let raw = "";
+  let escaped = false;
+  for (let index = markerIndex + marker.length; index < text.length; index += 1) {
+    const char = text[index];
+    if (escaped) {
+      raw += `\\${char}`;
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === '"') break;
+    raw += char;
+  }
+  try {
+    return JSON.parse(`"${raw}"`);
+  } catch {
+    return "";
+  }
 }
 
 function extractVideoSpecificDescription(description) {
